@@ -1,0 +1,2 @@
+vless://7f61406a-67cb-4fe3-a7d8-4f03807baba2@lightfanni-77420.abra2024.xyz:32590?encryption=none&security=none&type=tcp&headerType=http&host=fararu.com#LightFanni-77420-F2
+vless://5a91c0af-38e4-4882-b114-0d40df59bd06@lightseo-78626.netblue.ir:47904?encryption=none&security=none&type=tcp&headerType=http&host=fararu.com#LightSeo-78626-F3
