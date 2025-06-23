@@ -55,24 +55,9 @@ def decode_vmess(link: str):
 
 def generate_config(link: str):
     if link.startswith("vmess://"):
-        vmess = decode_vmess(link)
-        if not vmess:
-            return None
-        # ساخت فایل config با v2ray json structure ساده
-        return {
-            "inbounds": [{"port": 1080, "listen": "127.0.0.1", "protocol": "socks", "settings": {"auth": "noauth"}}],
-            "outbounds": [{
-                "protocol": "vmess",
-                "settings": {"vnext": [{
-                    "address": vmess["add"],
-                    "port": int(vmess["port"]),
-                    "users": [{
-                        "id": vmess["id"],
-                        "alterId": int(vmess.get("aid", 0)),
-                        "security": vmess.get("scy", "auto")
-                    }]
-                }]}}]}
-        
+        config = decode_vmess(link)
+        return config
+
     return None
 
 
@@ -83,8 +68,8 @@ def test_v2ray_config(link: str, exec_path: str):
 
     # quick connectivity check to remote server before spawning V2Ray
     try:
-        address = config["outbounds"][0]["settings"]["vnext"][0]["address"]
-        port = config["outbounds"][0]["settings"]["vnext"][0]["port"]
+        address = config.get("add") or config["outbounds"][0]["settings"]["vnext"][0]["address"]
+        port = int(config.get("port") or config["outbounds"][0]["settings"]["vnext"][0]["port"])
         with socket.create_connection((address, port), timeout=5):
             pass
     except Exception:
