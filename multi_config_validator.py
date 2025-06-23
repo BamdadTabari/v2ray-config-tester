@@ -1,34 +1,25 @@
-# نسخه دقیق‌تر: استفاده از V2Ray Core برای بررسی اتصال واقعی
-# نیازمند نصب v2ray-core و اجرای subprocess برای تست هر کانفیگ واقعی
-
 import base64
 import json
 import concurrent.futures
 import subprocess
 import tempfile
 import os
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 INPUT_FILE = "test.txt"
 OUTPUT_FILE = "valid_configs.txt"
-V2RAY_EXEC = r"C:\\Users\\bamdad\\Desktop\\zz_v2rayN-With-Core-SelfContained\\v2rayN.exe"  # مسیر به فایل اجرایی v2ray-core اگر نصب محلی نیست تغییر دهید
+V2RAY_EXEC = r"C:\\Users\\bamdad\\Desktop\\zz_v2rayN-With-Core-SelfContained\\v2rayN.exe"
 
 
 def decode_vmess(link: str):
-    try:
-        raw = link[8:]
-        decoded = base64.b64decode(raw + '=' * (-len(raw) % 4)).decode()
-        return json.loads(decoded)
-    except Exception:
-        return None
+    raw = link[8:]
+    decoded = base64.b64decode(raw + '=' * (-len(raw) % 4)).decode()
+    return json.loads(decoded)
 
 
 def generate_config(link: str):
     if link.startswith("vmess://"):
         vmess = decode_vmess(link)
-        if not vmess:
-            return None
-        # ساخت فایل config با v2ray json structure ساده
         return {
             "inbounds": [{"port": 1080, "listen": "127.0.0.1", "protocol": "socks", "settings": {"auth": "noauth"}}],
             "outbounds": [{
@@ -41,6 +32,39 @@ def generate_config(link: str):
                         "alterId": int(vmess.get("aid", 0)),
                         "security": vmess.get("scy", "auto")
                     }]
+                }]}
+            }]
+        }
+
+    if link.startswith("vless://"):
+        u = urlparse(link)
+        params = parse_qs(u.query)
+        return {
+            "inbounds": [{"port": 1080, "listen": "127.0.0.1", "protocol": "socks", "settings": {"auth": "noauth"}}],
+            "outbounds": [{
+                "protocol": "vless",
+                "settings": {"vnext": [{
+                    "address": u.hostname,
+                    "port": int(u.port or 443),
+                    "users": [{
+                        "id": u.username,
+                        "encryption": params.get("encryption", ["none"])[0],
+                        "flow": params.get("flow", [None])[0]
+                    }]
+                }]}
+            }]
+        }
+
+    if link.startswith("trojan://"):
+        u = urlparse(link)
+        return {
+            "inbounds": [{"port": 1080, "listen": "127.0.0.1", "protocol": "socks", "settings": {"auth": "noauth"}}],
+            "outbounds": [{
+                "protocol": "trojan",
+                "settings": {"servers": [{
+                    "address": u.hostname,
+                    "port": int(u.port or 443),
+                    "password": u.username
                 }]}
             }]
         }
@@ -69,6 +93,10 @@ def test_v2ray_config(link: str):
 
 
 def main():
+    if not os.path.exists(INPUT_FILE):
+        print(f"Input file {INPUT_FILE} not found")
+        return
+
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         links = [line.strip() for line in f if line.strip()]
 
