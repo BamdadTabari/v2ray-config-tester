@@ -1,10 +1,18 @@
 # نسخه دقیق‌تر: استفاده از V2Ray Core برای بررسی اتصال واقعی
 # نیازمند نصب v2ray-core و اجرای subprocess برای تست هر کانفیگ واقعی
 
+"""Validate V2Ray links from ``INPUT_FILE``.
+
+Each link is checked without modifying the input file. The script first
+verifies connectivity to the remote server then runs V2Ray's config test mode.
+Successful links are appended to ``OUTPUT_FILE``.
+"""
+
 import base64
 import json
 import concurrent.futures
 import subprocess
+import socket
 import tempfile
 import os
 import shutil
@@ -71,6 +79,15 @@ def generate_config(link: str):
 def test_v2ray_config(link: str, exec_path: str):
     config = generate_config(link)
     if not config:
+        return False
+
+    # quick connectivity check to remote server before spawning V2Ray
+    try:
+        address = config["outbounds"][0]["settings"]["vnext"][0]["address"]
+        port = config["outbounds"][0]["settings"]["vnext"][0]["port"]
+        with socket.create_connection((address, port), timeout=5):
+            pass
+    except Exception:
         return False
 
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
