@@ -78,8 +78,14 @@ def test_v2ray_config(link: str, exec_path: str):
         fpath = f.name
 
     try:
-        result = subprocess.run([exec_path, "-config", fpath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
-        success = b"started" in result.stdout or b"Started" in result.stderr
+        # Use V2Ray's built-in config test mode so the process exits immediately
+        result = subprocess.run(
+            [exec_path, "-test", "-config", fpath],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=10,
+        )
+        success = result.returncode == 0
     except Exception:
         success = False
     finally:
