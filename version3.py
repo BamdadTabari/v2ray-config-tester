@@ -9,10 +9,10 @@ from urllib.parse import urlparse
 
 INPUT_FILE = "test.txt"
 OUTPUT_FILE = "valid_configs.txt"
-V2RAY_EXEC = r"C:\Users\bamdad\Desktop\dist-master\dist-master\v2ray-windows-64\v2ray.exe"
+V2RAY_EXEC = "v2ray.exe"
 PING_TEST_DOMAIN = "http://1.1.1.1"
 MAX_PING_MS = 10000
-SOCKS_PORT = 10808
+SOCKS_PORT = 1000
 
 def decode_vmess(link):
     try:
