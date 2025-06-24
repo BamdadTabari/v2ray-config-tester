@@ -10,9 +10,9 @@ from urllib.parse import urlparse
 INPUT_FILE = "test.txt"
 OUTPUT_FILE = "valid_configs.txt"
 V2RAY_EXEC = "v2ray.exe"
-PING_TEST_DOMAIN = "http://1.1.1.1"
+PING_TEST_DOMAIN = "http://bing.com"
 MAX_PING_MS = 10000
-SOCKS_PORT = 1000
+SOCKS_PORT = 10808
 
 def decode_vmess(link):
     try:
@@ -113,7 +113,7 @@ def generate_config(config, kind):
     }]
     return out
 
-def wait_for_socks_ready(port=SOCKS_PORT, timeout=15):
+def wait_for_socks_ready(port=SOCKS_PORT, timeout=1):
     start = time.time()
     while time.time() - start < timeout:
         try:
@@ -130,7 +130,7 @@ def test_socks_ping():
             "--socks5", f"127.0.0.1:{SOCKS_PORT}",
             "-w", "%{time_total}",
             PING_TEST_DOMAIN
-        ], capture_output=True, timeout=15)
+        ], capture_output=True, timeout=2)
         if result.returncode != 0:
             print("⛔ Curl failed:", result.stderr.decode())
             return None
@@ -192,6 +192,8 @@ def main():
     valid = []
     for i, link in enumerate(links):
         print(f"⏳ Testing {i+1}/{len(links)}")
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            f.write("\n".join(valid))
         if check_link(link):
             valid.append(link)
 
